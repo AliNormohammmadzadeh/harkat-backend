@@ -74,7 +74,7 @@ async function main() {
   }
 
   const facilitatorId = userMap.get('elahe')!;
-  const seedPath = path.join(__dirname, 'seed-data.json');
+  const seedPath = path.join(process.cwd(), 'prisma/seed-data.json');
 
   if (!fs.existsSync(seedPath)) {
     console.log('No seed-data.json — run: npx ts-node scripts/extract-students.ts');
@@ -84,8 +84,17 @@ async function main() {
   const students: SeedStudent[] = JSON.parse(fs.readFileSync(seedPath, 'utf8'));
   console.log(`Seeding ${students.length} students...`);
 
+  const usedCaseNumbers = new Set<string>();
   let i = 0;
   for (const s of students) {
+    let caseNumber = s.caseNumber ?? null;
+    if (caseNumber) {
+      if (usedCaseNumbers.has(caseNumber)) {
+        caseNumber = `${caseNumber}-${s.id}`;
+      }
+      usedCaseNumbers.add(caseNumber);
+    }
+
     const n = parseInt(String(s.caseNumber ?? '').replace(/\D/g, ''), 10);
     const parity = Number.isFinite(n) ? n % 2 : i % 2;
     const supporterUsername = parity === 0 ? 'mahsa' : 'narges';
@@ -94,7 +103,7 @@ async function main() {
       where: { id: s.id },
       create: {
         id: s.id,
-        caseNumber: s.caseNumber ?? null,
+        caseNumber,
         firstName: s.firstName ?? null,
         lastName: s.lastName ?? null,
         fullName: s.fullName ?? null,
@@ -133,7 +142,7 @@ async function main() {
         },
       },
       update: {
-        caseNumber: s.caseNumber ?? null,
+        caseNumber,
         fullName: s.fullName ?? null,
         overallAvg: s.overallAvg ?? null,
         studentStatus: s.studentStatus ?? 'تحت حمایت',

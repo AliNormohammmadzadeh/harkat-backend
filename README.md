@@ -8,12 +8,37 @@ NestJS REST backend for **پنل تسهیل** (Harkat Human Movement Foundation 
 - HTML prototype: [`DASHBO~3.HTM`](../DASHBO~3.HTM)
 - Implementation checklist: [`TASK.md`](../TASK.md)
 
-## Setup
+## Docker (recommended for server / GitHub deploy)
 
 ```bash
-# From repo root
-docker compose up -d
+cd backend
+cp .env.docker.example .env
+# Edit JWT_SECRET before production deploy
 
+docker compose up -d --build
+# API:    http://localhost:3000/api
+# Swagger http://localhost:3000/api/docs
+# Postgres host port: 5433 (default)
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `API_PORT` | 3000 | Host port for API |
+| `POSTGRES_PORT` | 5434 | Host port for Postgres |
+| `RUN_SEED` | true | Seed users + 527 students on start |
+| `JWT_SECRET` | (change me) | JWT signing key |
+
+After first successful start, set `RUN_SEED=false` in `.env` and restart to skip re-seeding.
+
+```bash
+npm run docker:logs    # follow API logs
+npm run docker:down    # stop containers
+npm run docker:reset   # wipe volumes + rebuild
+```
+
+## Local development (without Docker)
+
+```bash
 cd backend
 cp .env.example .env
 npm install
@@ -44,6 +69,7 @@ Use **Authorize** with `Bearer <token>` after login.
 |---------|-------------|
 | `npm run start:dev` | Dev server with hot reload |
 | `npm run build` | Production build |
+| `npm run docker:up` | Build & start Docker stack |
 | `npm run extract:students` | Extract REAL_STUDENTS from HTML → `prisma/seed-data.json` |
 | `npm run prisma:migrate` | Run DB migrations |
 | `npm run prisma:seed` | Seed users + 527 students |

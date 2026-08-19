@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: harkat-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-harkat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-harkat}
+      POSTGRES_DB: ${POSTGRES_DB:-harkat}
+    ports:
+      - '${POSTGRES_PORT:-5434}:5432'
+    volumes:
+      - harkat_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-harkat} -d ${POSTGRES_DB:-harkat}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: harkat-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-harkat}:${POSTGRES_PASSWORD:-harkat}@postgres:5432/${POSTGRES_DB:-harkat}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      PORT: ${PORT:-3000}
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
+      RUN_SEED: ${RUN_SEED:-true}
+    ports:
+      - '${API_PORT:-3000}:3000'
+    volumes:
+      - harkat_uploads:/app/uploads
+
+volumes:
+  harkat_pg_data:
+  harkat_uploads:
