@@ -1,0 +1,348 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  super_admin
+  manager
+  facilitator
+  supporter
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  username     String    @unique
+  passwordHash String    @map("password_hash")
+  fullName     String    @map("full_name")
+  initials     String?
+  role         UserRole
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  facilitatedStudents Student[] @relation("Facilitator")
+  supportedStudents   Student[] @relation("Supporter")
+  createdPrograms     Program[]
+
+  @@map("users")
+}
+
+model Student {
+  id                  String   @id
+  caseNumber          String?  @unique @map("case_number")
+  firstName           String?  @map("first_name")
+  lastName            String?  @map("last_name")
+  fullName            String?  @map("full_name")
+  gender              String?
+  natId               String?  @map("nat_id")
+  isForeign           Boolean  @default(false) @map("is_foreign")
+  foreignId           String?  @map("foreign_id")
+  phone               String?
+  studentStatus       String?  @map("student_status")
+  studentStatusReason String?  @map("student_status_reason")
+  grade               String?
+  gradeLevel          String?  @map("grade_level")
+  major               String?
+  school              String?
+  schoolType          String?  @map("school_type")
+  overallAvg          Decimal? @map("overall_avg") @db.Decimal(4, 2)
+  economicStatus      Int?     @map("economic_status") @db.SmallInt
+  decile              Int?     @db.SmallInt
+  fatherEdu           Int?     @map("father_edu") @db.SmallInt
+  motherEdu           Int?     @map("mother_edu") @db.SmallInt
+  parentInvolvement   Int?     @map("parent_involvement") @db.SmallInt
+  digitalAccess       Int?     @map("digital_access") @db.SmallInt
+  facilitatorId       String?  @map("facilitator_id") @db.Uuid
+  supporterId         String?  @map("supporter_id") @db.Uuid
+  registeredBy        String?  @map("registered_by")
+  mentalHealthNote    String?  @map("mental_health_note")
+  evaluatorSuggestion String?  @map("evaluator_suggestion")
+  interestInEliteSchool String? @map("interest_in_elite_school")
+  needsSupplementaryBooks String? @map("needs_supplementary_books")
+  isCustom            Boolean  @default(false) @map("is_custom")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  facilitator User? @relation("Facilitator", fields: [facilitatorId], references: [id])
+  supporter   User? @relation("Supporter", fields: [supporterId], references: [id])
+
+  profile              StudentProfile?
+  householdMembers     HouseholdMember[]
+  familyHealthRecords  FamilyHealthRecord[]
+  familyCircumstances  StudentFamilyCircumstance[]
+  mpiFlags             StudentMpiFlag[]
+  tagSelections        StudentTagSelection[]
+  reportCards          ReportCard[]
+  softSkillAssessments SoftSkillAssessment[]
+  financeEntries       FinanceEntry[]
+  services             Service[]
+  referrals            Referral[]
+  scholarships         Scholarship[]
+  programMembers       ProgramMember[]
+  programAttendance    ProgramAttendance[]
+
+  @@map("students")
+}
+
+model StudentProfile {
+  studentId               String   @id @map("student_id")
+  photoUrl                String?  @map("photo_url")
+  birthY                  Int?     @map("birth_y") @db.SmallInt
+  birthM                  Int?     @map("birth_m") @db.SmallInt
+  birthD                  Int?     @map("birth_d") @db.SmallInt
+  enrollY                 Int?     @map("enroll_y") @db.SmallInt
+  enrollM                 Int?     @map("enroll_m") @db.SmallInt
+  enrollD                 Int?     @map("enroll_d") @db.SmallInt
+  fatherPhone             String?  @map("father_phone")
+  motherPhone             String?  @map("mother_phone")
+  landline                String?
+  district                String?
+  address                 String?
+  introMethod             String?  @map("intro_method")
+  referrer                String?
+  referrerNote            String?  @map("referrer_note")
+  fatherName              String?  @map("father_name")
+  fatherJob               String?  @map("father_job")
+  motherName              String?  @map("mother_name")
+  motherJob               String?  @map("mother_job")
+  familySize              Int?     @map("family_size") @db.SmallInt
+  householdHead           String?  @map("household_head")
+  consentY                Int?     @map("consent_y") @db.SmallInt
+  consentM                Int?     @map("consent_m") @db.SmallInt
+  consentD                Int?     @map("consent_d") @db.SmallInt
+  consentStatus           String?  @map("consent_status")
+  fatherIncome            Decimal? @map("father_income")
+  motherIncome            Decimal? @map("mother_income")
+  deprivedArea            String?  @map("deprived_area")
+  housingType             String?  @map("housing_type")
+  housingArea             Decimal? @map("housing_area")
+  housingCondition        Int?     @map("housing_condition") @db.SmallInt
+  housingDeposit          Decimal? @map("housing_deposit")
+  housingRent             Decimal? @map("housing_rent")
+  familyLeisure           Int?     @map("family_leisure") @db.SmallInt
+  educationView           Int?     @map("education_view") @db.SmallInt
+  externalAidOther        String?  @map("external_aid_other")
+  depAnalysis             String?  @map("dep_analysis")
+  depRecommend            String?  @map("dep_recommend")
+  schoolDistanceKm        Decimal? @map("school_distance_km")
+  interestLevel           Int?     @map("interest_level") @db.SmallInt
+  preferredMajor          String?  @map("preferred_major")
+  needsSupplementaryBooksField String? @map("needs_supplementary_books_field")
+  interestInEliteSchoolField String? @map("interest_in_elite_school_field")
+  barriersOther           String?  @map("barriers_other")
+  softNote                String?  @map("soft_note")
+  financialCode           String?  @map("financial_code")
+  ibanNumber              String?  @map("iban_number")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("student_profiles")
+}
+
+model HouseholdMember {
+  id        String  @id @default(uuid()) @db.Uuid
+  studentId String  @map("student_id")
+  name      String?
+  relation  String?
+  age       String?
+  note      String?
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("household_members")
+}
+
+model FamilyHealthRecord {
+  id          String  @id @default(uuid()) @db.Uuid
+  studentId   String  @map("student_id")
+  name        String?
+  healthType  String? @map("health_type")
+  description String?
+  cost        String?
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("family_health_records")
+}
+
+model StudentFamilyCircumstance {
+  studentId       String  @map("student_id")
+  circumstanceKey String  @map("circumstance_key")
+  isActive        Boolean @default(false) @map("is_active")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, circumstanceKey])
+  @@map("student_family_circumstances")
+}
+
+model StudentMpiFlag {
+  studentId  String  @map("student_id")
+  depIndex   Int     @map("dep_index") @db.SmallInt
+  isDeprived Boolean @default(false) @map("is_deprived")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, depIndex])
+  @@map("student_mpi_flags")
+}
+
+model StudentTagSelection {
+  studentId String @map("student_id")
+  tagGroup  String @map("tag_group")
+  tagValue  String @map("tag_value")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, tagGroup, tagValue])
+  @@map("student_tag_selections")
+}
+
+model ReportCard {
+  id        String @id @default(uuid()) @db.Uuid
+  studentId String @map("student_id")
+  term      String?
+  year      String?
+  sortOrder Int?   @map("sort_order")
+
+  student Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  grades  ReportCardGrade[]
+
+  @@map("report_cards")
+}
+
+model ReportCardGrade {
+  id           String  @id @default(uuid()) @db.Uuid
+  reportCardId String  @map("report_card_id") @db.Uuid
+  subject      String?
+  score        Decimal?
+  weight       Decimal @default(1)
+
+  reportCard ReportCard @relation(fields: [reportCardId], references: [id], onDelete: Cascade)
+
+  @@map("report_card_grades")
+}
+
+model SoftSkillAssessment {
+  id        String @id @default(uuid()) @db.Uuid
+  studentId String @map("student_id")
+  assessedY Int?   @map("assessed_y") @db.SmallInt
+  assessedM Int?   @map("assessed_m") @db.SmallInt
+  assessedD Int?   @map("assessed_d") @db.SmallInt
+  note      String?
+
+  student Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  scores  SoftSkillScore[]
+
+  @@map("soft_skill_assessments")
+}
+
+model SoftSkillScore {
+  assessmentId String  @map("assessment_id") @db.Uuid
+  skillKey     String  @map("skill_key")
+  score        Decimal?
+
+  assessment SoftSkillAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@id([assessmentId, skillKey])
+  @@map("soft_skill_scores")
+}
+
+model FinanceEntry {
+  id          String  @id @default(uuid()) @db.Uuid
+  studentId   String  @map("student_id")
+  programId   String? @map("program_id")
+  entryDate   String? @map("entry_date")
+  category    String?
+  amount      Decimal?
+  description String?
+
+  student Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  program Program? @relation(fields: [programId], references: [id], onDelete: SetNull)
+
+  @@map("finance_entries")
+}
+
+model Service {
+  id          String  @id @default(uuid()) @db.Uuid
+  studentId   String  @map("student_id")
+  serviceDate String? @map("service_date")
+  serviceType String? @map("service_type")
+  description String?
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("services")
+}
+
+model Referral {
+  id           String  @id @default(uuid()) @db.Uuid
+  studentId    String  @map("student_id")
+  refDate      String? @map("ref_date")
+  organization String?
+  status       String?
+  description  String?
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("referrals")
+}
+
+model Scholarship {
+  id          String  @id @default(uuid()) @db.Uuid
+  studentId   String  @map("student_id")
+  source      String?
+  amount      String?
+  period      String?
+  description String?
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("scholarships")
+}
+
+model Program {
+  id              String   @id
+  name            String
+  description     String?
+  totalCost       Decimal  @default(0) @map("total_cost")
+  createdAtJalali String?  @map("created_at_jalali")
+  createdById     String?  @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  createdBy       User?               @relation(fields: [createdById], references: [id])
+  members         ProgramMember[]
+  attendance      ProgramAttendance[]
+  financeEntries  FinanceEntry[]
+
+  @@map("programs")
+}
+
+model ProgramMember {
+  programId String @map("program_id")
+  studentId String @map("student_id")
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([programId, studentId])
+  @@map("program_members")
+}
+
+model ProgramAttendance {
+  programId  String   @map("program_id")
+  studentId  String   @map("student_id")
+  isPresent  Boolean  @default(false) @map("is_present")
+  recordedAt DateTime @default(now()) @map("recorded_at")
+
+  program Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([programId, studentId])
+  @@map("program_attendance")
+}
